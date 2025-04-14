@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthetic Voice Generation Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .architecture-diagram {
+            width: 100%;
+            margin: 30px 0;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stage {
+            margin-bottom: 40px;
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+        }
+        
+        .stage-header {
+            background: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        
+        .sub-process {
+            margin: 15px 0 15px 20px;
+            padding: 15px;
+            background: #f1f9ff;
+            border-radius: 5px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 3px;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            background: #3498db;
+            color: white;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .flowchart {
+            width: 100%;
+            height: 400px;
+            margin: 30px 0;
+            background: white;
+            overflow: hidden;
+        }
+        
+        .novelty {
+            background: #e1f5fe;
+            border-left: 3px solid #03a9f4;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+        
+        .neural-layers {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            text-align: center;
+            overflow-x: auto;
+        }
+        
+        .layer {
+            background: #e8f4f8;
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 100px;
+            margin: 0 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .layer-connections {
+            width: 100%;
+            height: 200px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .neural-layers {
+                flex-direction: column;
+            }
+            
+            .layer {
+                margin: 5px 0;
+            }
+        }
+
+        #architecture-svg {
+            width: 100%;
+            height: auto;
+            margin: 20px 0;
+        }
+
+        .process-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            transition: transform 0.3s ease;
+        }
+
+        .process-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .code-block {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .tabs {
+            display: flex;
+            margin: 20px 0 0 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            background: white;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+    <script>
+        function openTab(evt, tabName) {
+            // Hide all tab content
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove("active");
+            }
+            
+            // Remove "active" class from all tab buttons
+            const tabs = document.getElementsByClassName("tab");
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            
+            // Show the specific tab content
+            document.getElementById(tabName).classList.add("active");
+            
+            // Add "active" class to the button that opened the tab
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+</head>
+<body>
+    <h1>Synthetic Voice Generation Architecture</h1>
+    <p>This interactive architecture diagram explains the process of generating synthetic voices as described in Patent US 2024/0185831 A1. The system uses neural networks to process audio data into phonemes and pitch segments, creating natural-sounding synthetic voices.</p>
+    
+    <div class="architecture-diagram">
+        <svg id="architecture-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+            <!-- Main Flow -->
+            <rect x="50" y="50" width="700" height="500" fill="#f9f9f9" stroke="#ddd" stroke-width="2" rx="10" ry="10"/>
+            
+            <!-- Phase 1: Audio Capture & Preprocessing -->
+            <rect x="70" y="100" width="200" height="80" fill="#3498db" stroke="#2980b9" stroke-width="2" rx="5" ry="5" opacity="0.8"/>
+            <text x="170" y="145" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Audio Capture &amp; Preprocessing</text>
+            
+            <!-- Phase 2: Phoneme Processing -->
+            <rect x="300" y="100" width="200" height="80" fill="#3498db" stroke="#2980b9" stroke-width="2" rx="5" ry="5" opacity="0.8"/>
+            <text x="400" y="145" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Phoneme Processing</text>
+            
+            <!-- Phase 3: Pitch Processing -->
+            <rect x="530" y="100" width="200" height="80" fill="#3498db" stroke="#2980b9" stroke-width="2" rx="5" ry="5" opacity="0.8"/>
+            <text x="630" y="145" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Pitch Processing</text>
+            
+            <!-- Phase 4: Spectral Analysis -->
+            <rect x="70" y="230" width="200" height="80" fill="#3498db" stroke="#2980b9" stroke-width="2" rx="5" ry="5" opacity="0.8"/>
+            <text x="170" y="275" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Spectral Analysis</text>
+            
+            <!-- Phase 5: Neural Vocoder -->
+            <rect x="300" y="230" width="200" height="80" fill="#3498db" stroke="#2980b9" stroke-width="2" rx="5" ry="5" opacity="0.8"/>
+            <text x="400" y="275" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Neural Vocoder</text>
+            
+            <!-- Phase 6: Quality Filtering -->
+            <rect x="530" y="230" width="200" height="80" fill="#3498db" stroke="#2980b9" stroke-width="2" rx="5" ry="5" opacity="0.8"/>
+            <text x="630" y="275" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Quality Filtering</text>
+            
+            <!-- Phase 7: Neural Network -->
+            <rect x="300" y="360" width="200" height="80" fill="#e74c3c" stroke="#c0392b" stroke-width="2" rx="5" ry="5" opacity="0.8"/>
+            <text x="400" y="405" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Neural Network 
+Processing</text>
+            
+            <!-- Phase 8: Synthetic Voice Output -->
+            <rect x="300" y="470" width="200" height="50" fill="#2ecc71" stroke="#27ae60" stroke-width="2" rx="5" ry="5" opacity="0.8"/>
+            <text x="400" y="500" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Synthetic Voice</text>
+            
+            <!-- Connecting Arrows -->
+            <line x1="270" y1="140" x2="300" y2="140" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="500" y1="140" x2="530" y2="140" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="170" y1="180" x2="170" y2="230" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="400" y1="180" x2="400" y2="230" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="630" y1="180" x2="630" y2="230" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="270" y1="270" x2="300" y2="270" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="500" y1="270" x2="530" y2="270" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="400" y1="310" x2="400" y2="360" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="630" y1="310" x2="630" y2="400" stroke="#666" stroke-width="2"/>
+            <line x1="630" y1="400" x2="500" y2="400" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <line x1="400" y1="440" x2="400" y2="470" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            
+            <!-- Arrowhead marker -->
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="8.5" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+                </marker>
+            </defs>
+        </svg>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="openTab(event, 'overview')">Overview</div>
+        <div class="tab" onclick="openTab(event, 'audio-processing')">Audio Processing</div>
+        <div class="tab" onclick="openTab(event, 'neural-network')">Neural Architecture</div>
+        <div class="tab" onclick="openTab(event, 'innovations')">Key Innovations</div>
+    </div>
+
+    <div id="overview" class="tab-content active">
+        <div class="process-card">
+            <h2>System Overview</h2>
+            <p>The patent describes a comprehensive system for generating synthetic voices that sound natural by using neural networks. The process involves several key stages:</p>
+            
+            <ol>
+                <li><strong>Audio Data Acquisition</strong>: Capturing speech segments from various sources</li>
+                <li><strong>Preprocessing</strong>: Converting to uniform format, cutting into segments, grouping by speaker</li>
+                <li><strong>Phoneme Processing</strong>: Identifying and isolating phonemes</li>
+                <li><strong>Pitch Processing</strong>: Analyzing pitch patterns and classifying into categories</li>
+                <li><strong>Spectral Analysis</strong>: Converting to Mel-Spectrograms</li>
+                <li><strong>Neural Vocoder Processing</strong>: Using neural networks to predict phoneme sequences</li>
+                <li><strong>Quality Filtering</strong>: Culling poor-quality segments and merging high-quality ones</li>
+                <li><strong>Neural Network Integration</strong>: Processing through prediction layers</li>
+                <li><strong>Voice Generation</strong>: Outputting the final synthetic voice</li>
+            </ol>
+
+            <div class="novelty">
+                <p><strong>Key Differentiation:</strong> Unlike traditional concatenative methods, this system uses neural networks to learn the relationships between phonemes and pitch. It also actively filters out poor-quality segments and creates superior ones by averaging similar components.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="audio-processing" class="tab-content">
+        <div class="process-card">
+            <h2>Phase 1: Audio Capture & Preprocessing</h2>
+            <p>The system begins by capturing audio data from various sources and preparing it for neural network processing:</p>
+            
+            <div class="sub-process">
+                <h3>Step 1: Capture Speech Segments (Fig. 2, step 200)</h3>
+                <p>The system captures speech segments from various sources including:</p>
+                <ul>
+                    <li>Online media platforms (YouTube, Spotify, podcasts)</li>
+                    <li>Speech segment databases</li>
+                    <li>Vocal recordings from diverse speakers</li>
+                </ul>
+
+                <div class="code-block">
+                    // Conceptual implementation
+                    function captureAudioSegments(sources) {
+                        let speechSegments = [];
+                        
+                        for (const source of sources) {
+                            const audioData = fetchAudioFromSource(source);
+                            speechSegments.push({
+                                audio: audioData,
+                                speakerMetadata: extractSpeakerInfo(source)
+                            });
+                        }
+                        
+                        return speechSegments;
+                    }
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>Step 2: Uniform Format Conversion (Fig. 2, step 202)</h3>
+                <p>All captured audio is converted to a standard format (e.g., mp3) to ensure consistent processing.</p>
+                
+                <div class="code-block">
+                    function convertToUniformFormat(segments) {
+                        return segments.map(segment => ({
+                            ...segment,
+                            audio: convertToMP3(segment.audio)
+                        }));
+                    }
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>Step 3: Segmentation (Fig. 2, step 204)</h3>
+                <p>The audio is cut into uniform-length segments (typically 30-second clips) for more manageable processing.</p>
+                
+                <div class="code-block">
+                    function cutIntoUniformLength(segments) {
+                        const SEGMENT_LENGTH = 30; // seconds
+                        let uniformSegments = [];
+                        
+                        for (const segment of segments) {
+                            const clippedSegments = clipAudio(segment.audio, SEGMENT_LENGTH);
+                            uniformSegments.push(...clippedSegments.map(audio => ({
+                                ...segment,
+                                audio
+                            })));
+                        }
+                        
+                        return uniformSegments;
+                    }
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>Step 4: Speaker Grouping (Fig. 2, steps 206-208)</h3>
+                <p>Segments are grouped by speaker and saved to common source folders. This preserves speaker attributes such as:</p>
+                <ul>
+                    <li>Gender, age, educational level</li>
+                    <li>Regional accent</li>
+                    <li>Other demographic attributes</li>
+                </ul>
+                
+                <div class="code-block">
+                    function groupBySpeaker(segments) {
+                        const speakerGroups = {};
+                        
+                        for (const segment of segments) {
+                            const speakerId = segment.speakerMetadata.id;
+                            if (!speakerGroups[speakerId]) {
+                                speakerGroups[speakerId] = [];
+                            }
+                            speakerGroups[speakerId].push(segment);
+                        }
+                        
+                        // Save to common source folders
+                        for (const [speakerId, segments] of Object.entries(speakerGroups)) {
+                            saveToCommonSourceFolder(speakerId, segments);
+                        }
+                        
+                        return speakerGroups;
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="process-card">
+            <h2>Phase 2: Phoneme Processing</h2>
+            <p>Once audio is preprocessed, the system identifies and processes phonemes:</p>
+            
+            <div class="sub-process">
+                <h3>Step 1: Phoneme Identification (Fig. 3, steps 300-302)</h3>
+                <p>The system analyzes each speech segment to identify the distinct phonemes within it.</p>
+                
+                <div class="code-block">
+                    function identifyPhonemes(audioSegments) {
+                        return audioSegments.map(segment => ({
+                            ...segment,
+                            phonemes: phonemeProcessor.analyze(segment.audio)
+                        }));
+                    }
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>Step 2: Phoneme Isolation (Fig. 3, step 304)</h3>
+                <p>Each identified phoneme is isolated from the speech segment to create individual phoneme segments.</p>
+                
+                <div class="code-block">
+                    function isolatePhonemes(segmentsWithPhonemes) {
+                        let phonemeSegments = [];
+                        
+                        for (const segment of segmentsWithPhonemes) {
+                            for (const phoneme of segment.phonemes) {
+                                phonemeSegments.push({
+                                    audio: extractAudioSlice(segment.audio, phoneme.startTime, phoneme.endTime),
+                                    phonemeType: phoneme.type,
+                                    speakerMetadata: segment.speakerMetadata
+                                });
+                            }
+                        }
+                        
+                        return phonemeSegments;
+                    }
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>Step 3: Phoneme Grouping (Fig. 3, steps 306-308)</h3>
+                <p>Phoneme segments are grouped by phoneme type and saved to common phoneme folders.</p>
+                
+                <div class="code-block">
+                    function groupPhonemes(phonemeSegments) {
+                        const phonemeGroups = {};
+                        
+                        // Group by phoneme type (approximately 44 distinct phonemes in English)
+                        for (const segment of phonemeSegments) {
+                            const phonemeType = segment.phonemeType;
+                            if (!phonemeGroups[phonemeType]) {
+                                phonemeGroups[phonemeType] = [];
+                            }
+                            phonemeGroups[phonemeType].push(segment);
+                        }
+                        
+                        // Save to common phoneme folders
+                        for (const [phonemeType, segments] of Object.entries(phonemeGroups)) {
+                            saveToCommonPhonemeFolder(phonemeType, segments);
+                        }
+                        
+                        return phonemeGroups;
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="process-card">
+            <h2>Phase 3: Pitch Processing</h2>
+            <p>In parallel with phoneme processing, the system analyzes pitch characteristics:</p>
+            
+            <div class="sub-process">
+                <h3>Step 1: Pitch Analysis (Fig. 3, steps 310-312)</h3>
+                <p>The system analyzes pitch patterns and tags phonemes with pitch designations (high, medium, low).</p>
+                
+                <div class="code-block">
+                    function analyzePitch(phonemeSegments) {
+                        return phonemeSegments.map(segment => {
+                            const pitchAnalysis = pitchProcessor.analyze(segment.audio);
+                            return {
+                                ...segment,
+                                pitch: categorize(pitchAnalysis.averagePitch),
+                                pitchData: pitchAnalysis
+                            };
+                        });
+                    }
+                    
+                    function categorize(pitch) {
+                        if (pitch > HIGH_THRESHOLD) return 'high';
+                        if (pitch > MEDIUM_THRESHOLD) return 'medium';
+                        return 'low';
+                    }
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>Step 2: Pitch-Phoneme Segment Creation (Fig. 3, step 314)</h3>
+                <p>Phoneme segments with pitch information are saved to pitch-phoneme folders, creating a comprehensive library.</p>
+                
+                <div class="code-block">
+                    function savePitchPhonemeSegments(pitchTaggedSegments) {
+                        // Organize into 132 folders (44 phonemes × 3 pitch levels)
+                        for (const segment of pitchTaggedSegments) {
+                            const folderName = `${segment.phonemeType}_${segment.pitch}`;
+                            saveToPitchPhonemeFolder(folderName, segment);
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="process-card">
+            <h2>Phase 4: Spectral Analysis</h2>
+            <p>The system converts phoneme-pitch segments into spectral representations:</p>
+            
+            <div class="sub-process">
+                <h3>Step 1: Mel Spectrogram Conversion (Fig. 5, steps 500-502)</h3>
+                <p>Phoneme-pitch segments are converted into Mel Spectrograms, which represent audio data in a form neural networks can process effectively.</p>
+                
+                <div class="code-block">
+                    function convertToMelSpectrogram(pitchPhonemeSegments) {
+                        return pitchPhonemeSegments.map(segment => ({
+                            ...segment,
+                            melSpectrogram: audioToMelSpectrogram(segment.audio)
+                        }));
+                    }
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>Step 2: SPL Analysis (Fig. 5, steps 506-512)</h3>
+                <p>The system performs Sound Pressure Level (SPL) analysis to quantify various sound attributes:</p>
+                <ul>
+                    <li>Sound pressure (volume)</li>
+                    <li>Tone characteristics</li>
+                    <li>Pause attributes</li>
+                </ul>
+                
+                <div class="code-block">
+                    function performSPLAnalysis(spectrogramSegments) {
+                        return spectrogramSegments.map(segment => {
+                            const splAnalysis = analyzeSPL(segment.melSpectrogram);
+                            return {
+                                ...segment,
+                                soundPressure: splAnalysis.pressure,
+                                tone: splAnalysis.tone,
+                                pauseAttributes: splAnalysis.pauses
+                            };
+                        });
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="neural-network" class="tab-content">
+        <div class="process-card">
+            <h2>Neural Network Architecture</h2>
+            <p>The core of the system is a sophisticated neural network architecture designed specifically for voice synthesis:</p>
+
+            <div class="sub-process">
+                <h3>Neural Vocoder (Fig. 6, steps 600-612)</h3>
+                <p>The neural vocoder processes spectral data through multiple stages:</p>
+                
+                <ol>
+                    <li>Initial processing through the Phoneme Duration Prediction Model</li>
+                    <li>Categorization according to phoneme types</li>
+                    <li>Quality filtering to cull segments with poor attributes</li>
+                    <li>Merging of high-quality segments</li>
+                    <li>SPL analysis for detailed sound characteristics</li>
+                </ol>
+                
+                <div class="code-block">
+                    class NeuralVocoder {
+                        constructor() {
+                            this.phonemeDurationModel = new PhonemeDurationPredictionModel();
+                        }
+                        
+                        process(spectralSegments) {
+                            // Step 1: Process through phoneme duration model
+                            const durationPredicted = this.phonemeDurationModel.predict(spectralSegments);
+                            
+                            // Step 2: Categorize by phoneme
+                            const categorized = this.categorizeByPhoneme(durationPredicted);
+                            
+                            // Step 3: Quality filtering
+                            const culled = this.cullPoorQualitySegments(categorized);
+                            
+                            // Step 4: Merge similar segments
+                            const merged = this.mergeSegments(culled);
+                            
+                            // Step 5: SPL analysis
+                            return this.performSPLAnalysis(merged);
+                        }
+                        
+                        // Implementation of helper methods...
+                    }
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>Phoneme Prediction Layers (Fig. 8, elements 800-804)</h3>
+                <p>The neural network includes dedicated phoneme prediction layers with weighted connections:</p>
+                
+                <ul>
+                    <li>Each node corresponds to a specific phoneme</li>
+                    <li>Weights represent transition probabilities between phonemes</li>
+                    <li>Multiple layers allow for context-aware prediction</li>
+                </ul>
+                
+                <div class="code-block">
+                    class PhonemeLayer {
+                        constructor(phonemeCount) {
+                            this.nodes = Array(phonemeCount).fill().map(() => new PhonemeNode());
+                            this.initializeWeights();
+                        }
+                        
+                        initializeWeights() {
+                            // Initialize weights between 0-20
+                            // Higher weights indicate stronger likelihood of transition
+                        }
+                        
+                        predict(previousLayerActivation) {
+                            // Use weights to predict next phoneme based on previous layer
+                            return this.nodes.map((node, index) => 
+                                node.activate(previousLayerActivation, this.weights[index]));
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>Pitch Prediction Layers (Fig. 8, elements 814-818)</h3>
+                <p>Similar to phoneme layers, pitch prediction layers model the pitch transitions:</p>
+                
+                <ul>
+                    <li>Nodes represent different pitch levels</li>
+                    <li>Weights model natural pitch progression</li>
+                    <li>Allows for natural intonation patterns</li>
+                </ul>
+                
+                <div class="code-block">
+                    class PitchLayer {
+                        constructor(pitchLevels) {
+                            this.nodes = Array(pitchLevels).fill().map(() => new PitchNode());
+                            this.initializeWeights();
+                        }
+                        
+                        predict(phonemeActivation) {
+                            // Predict pitch based on phoneme activation
+                            return this.nodes.map((node, index) => 
+                                node.activate(phonemeActivation, this.weights[index]));
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>Integrated Prediction System (Fig. 9, steps 900-904)</h3>
+                <p>The final stage integrates phoneme and pitch predictions to generate the complete synthetic voice:</p>
+                
+                <ol>
+                    <li>Processed data passes through subsequent phoneme prediction layers</li>
+                    <li>Then through pitch prediction layers</li>
+                    <li>Finally outputting the complete synthetic voice</li>
+                </ol>
+                
+                <div class="code-block">
+                    function generateSyntheticVoice(processedData) {
+                        // Step 1: Pass through phoneme prediction layers
+                        const phonemePredictions = phonemePredictionLayers.predict(processedData);
+                        
+                        // Step 2: Pass through pitch prediction layers
+                        const pitchPredictions = pitchPredictionLayers.predict(phonemePredictions);
+                        
+                        // Step 3: Generate final voice output
+                        return synthesizer.generateVoice(phonemePredictions, pitchPredictions);
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="innovations" class="tab-content">
+        <div class="process-card">
+            <h2>Key Innovations</h2>
+            <p>The patent introduces several groundbreaking approaches to voice synthesis:</p>
+            
+            <div class="sub-process">
+                <h3>1. Phoneme-Pitch Segmentation</h3>
+                <p>Unlike traditional concatenative methods, this system breaks down speech into discrete phoneme and pitch segments, creating a more granular and flexible approach to synthesis.</p>
+                
+                <div class="novelty">
+                    <p>This granular approach allows for much more natural transitions between sounds and more realistic intonation patterns compared to older technologies that simply concatenated whole word recordings.</p>
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>2. Quality-Based Culling</h3>
+                <p>The system actively evaluates and filters segments based on multiple quality attributes, ensuring only the best samples are used.</p>
+                
+                <div class="novelty">
+                    <p>By culling segments that exceed or trespass common sound attributes, the system maintains consistency and quality in the final voice output.</p>
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>3. Averaging Similar Segments</h3>
+                <p>By averaging segments with similar phoneme, pitch, and sound qualities, the system creates superior representative segments that sound more natural than individual samples.</p>
+                
+                <div class="novelty">
+                    <p>This combining of similar segments reduces anomalies and creates more consistent, natural-sounding voice components.</p>
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>4. Neural Vocoder with Feedback</h3>
+                <p>The neural vocoder not only generates voice but analyzes differences between processed and pre-processed data, creating a feedback loop for continuous improvement.</p>
+                
+                <div class="novelty">
+                    <p>This iterative approach allows the system to refine its output through roughly 600 iterations, consistently improving voice quality.</p>
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>5. Frequency Calibration</h3>
+                <p>The system uses a 0.026% variance threshold to calibrate the synthetic voice's frequencies to match the original voice's frequencies.</p>
+                
+                <div class="novelty">
+                    <p>This precise frequency matching ensures that the crests and troughs of wavelengths in the synthetic voice closely correspond to the original voice, creating more authentic-sounding speech.</p>
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>6. Integration with Agent AI</h3>
+                <p>The patent describes deployment in a conversational AI system with pre-conversation, post-conversation, and agent neural networks, suggesting practical applications in customer service contexts.</p>
+                
+                <div class="novelty">
+                    <p>This integration enables realistic AI assistants that can mimic customer voices for enhanced familiarity or use specific voice profiles parameterized by gender, nationality, and residence.</p>
+                </div>
+            </div>
+
+            <div class="sub-process">
+                <h3>7. SSML Tags Implementation</h3>
+                <p>The system implements Speech Synthesizing Markup Language (SSML) tags to control speech characteristics like breathing, pauses, laughter, and speech disruptions.</p>
+                
+                <div class="novelty">
+                    <p>These customization instructions add natural variations and imperfections to the synthesized speech, significantly enhancing its realism.</p>
+                </div>
+            </div>
+
+            <div class
